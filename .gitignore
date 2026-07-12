@@ -1,0 +1,16 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+# Keep directory structure, ignore generated contents.
+Results/**
+!Results/**/
+!Results/**/.gitkeep
+
+interims/**
+!interims/**/
+!interims/**/.gitkeep
+
+calendar_plots/**
+!calendar_plots/.gitkeep
