@@ -9,13 +9,13 @@
 
 # Load input data if needed -------------------------------------------------
 if (exists("gps_df_geo", inherits = TRUE)) {
-  message("04_3_Geo_Imperviosness.R: gps_df_geo already loaded")
+  message("04_06_Geo_Imperviousness.R: gps_df_geo already loaded")
 } else {
   gps_df_geo <- readr::read_csv2(
     here("interims/geo/gps_df_geo_distance.csv"),
     show_col_types = FALSE
   )
-  message("04_3_Geo_Imperviosness.R: gps_df_geo loaded from interims/geo/gps_df_geo_distance.csv")
+  message("04_06_Geo_Imperviousness.R: gps_df_geo loaded from interims/geo/gps_df_geo_distance.csv")
 }
 
 # Calculate Mean Imperviousness in 100m Buffer around EMA Points ----------

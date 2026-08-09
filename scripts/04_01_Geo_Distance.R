@@ -17,7 +17,7 @@
 # The purpose of this processing is to quantify daily mobility patterns
 # and movement intensity per participant, including stationary periods.
 #
-# 04_1_Geo_Distance.R
+# 04_01_Geo_Distance.R
 #
 # This script calculates distance and movement indicators from GPS data.
 
@@ -43,13 +43,13 @@ distanceGPS <- function(lat1, lon1, lat2, lon2) {
 
 # Load input data if needed -------------------------------------------------
 if (exists("gps_df_filled", inherits = TRUE)) {
-  message("04_1_Geo_Distance.R: gps_df_filled already loaded")
+  message("04_01_Geo_Distance.R: gps_df_filled already loaded")
 } else {
   gps_df_filled <- readr::read_csv2(
     here("interims/gps_df_filled.csv"),
     show_col_types = FALSE
   )
-  message("04_1_Geo_Distance.R: gps_df_filled loaded from interims/gps_df_filled.csv")
+  message("04_01_Geo_Distance.R: gps_df_filled loaded from interims/gps_df_filled.csv")
 }
 
 # Calculate distance indicators --------------------------------------------

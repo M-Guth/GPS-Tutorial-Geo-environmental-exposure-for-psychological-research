@@ -18,13 +18,13 @@ cluster_function <- function(x) {
 
 # Load input data if needed -------------------------------------------------
 if (exists("gps_df_geo", inherits = TRUE)) {
-  message("04_2_Geo_uniqueplaces.R: gps_df_geo already loaded")
+  message("04_02_Geo_uniqueplaces.R: gps_df_geo already loaded")
 } else {
   gps_df_geo <- readr::read_csv2(
     here("interims/geo/gps_df_geo_distance.csv"),
     show_col_types = FALSE
   )
-  message("04_2_Geo_uniqueplaces.R: gps_df_geo loaded from interims/geo/gps_df_geo_distance.csv")
+  message("04_02_Geo_uniqueplaces.R: gps_df_geo loaded from interims/geo/gps_df_geo_distance.csv")
 }
 
 # Cluster analysis for places and variance --------------------------------

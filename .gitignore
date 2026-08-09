@@ -11,6 +11,3 @@ Results/**
 interims/**
 !interims/**/
 !interims/**/.gitkeep
-
-calendar_plots/**
-!calendar_plots/.gitkeep

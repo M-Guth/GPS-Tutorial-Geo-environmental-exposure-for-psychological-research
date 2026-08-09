@@ -20,11 +20,10 @@ packages <- c(
   "purrr",        # Applies functions across files and nested data structures
   "readr",        # Reads and writes CSV files with consistent parsing
   "tibble",       # Creates tidy data frames used across the pipeline
-  "ggplot2",      # Produces calendar plots and other visualisations
+  "ggplot2",      # Produces statistical visualisations
   "here",         # Builds project-relative file paths
   "lubridate",    # Parses and converts timestamps and dates
   "dbscan",       # Clustering algorithm for place identification
-  "ggTimeSeries", # Builds calendar heatmaps from day-level data
   "viridis",      # Provides colour scales for readable plots
   "sf",           # Handles spatial point and geometry operations
   "raster",       # Reads raster geodata such as imperviousness layers

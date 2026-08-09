@@ -20,13 +20,13 @@
 
 # Load input data if needed -------------------------------------------------
 if (exists("gps_df_geo", inherits = TRUE)) {
-  message("04_05_Geo_crowded_areas.R: gps_df_geo already loaded")
+  message("04_04_Geo_crowded_areas.R: gps_df_geo already loaded")
 } else {
   gps_df_geo <- readr::read_csv2(
     here("interims/geo/gps_df_geo_distance.csv"),
     show_col_types = FALSE
   )
-  message("04_05_Geo_crowded_areas.R: gps_df_geo loaded from interims/geo/gps_df_geo_distance.csv")
+  message("04_04_Geo_crowded_areas.R: gps_df_geo loaded from interims/geo/gps_df_geo_distance.csv")
 }
 
 # Functions ---------------------------------------------------------------
