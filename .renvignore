@@ -1,0 +1,8 @@
+# Discover dependencies only in the numbered tutorial and its entry points.
+# Simulation helpers and manuscript examples are not part of run_all.R.
+/*
+!/.Rprofile
+!/run_all.R
+!/scripts/
+/scripts/*
+!/scripts/*.R

@@ -56,7 +56,12 @@ if (exists("gps_df_filled", inherits = TRUE)) {
 # CRITICAL: arrange() by ID and timestamp_minute BEFORE group_by() to ensure
 # distances are calculated within each user's chronological sequence, not across users
 gps_df_geo <- gps_df_filled %>%
-  mutate(date = as.Date(timestamp_minute)) %>%
+  mutate(
+    date = as.Date(
+      lubridate::with_tz(timestamp_minute, "Europe/Zurich"),
+      tz = "Europe/Zurich"
+    )
+  ) %>%
   arrange(ID, timestamp_minute) %>%
   group_by(ID, date) %>%
   mutate(
@@ -81,7 +86,6 @@ write.csv2(gps_df_geo, here("interims/geo/gps_df_geo_distance.csv"))
 
 # Confirmation message ----------------------------------------------------
 message("Geo_Distance.R: Distance calculated successfully")
-
 
 
 

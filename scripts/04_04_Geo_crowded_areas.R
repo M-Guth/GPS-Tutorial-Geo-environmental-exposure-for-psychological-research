@@ -17,6 +17,38 @@
 # Data licensed under the Open Database License (ODbL):
 # https://www.openstreetmap.org/copyright
 
+# Overpass Turbo Query:
+# Query used to retrieve potentially crowded areas in Basel, Switzerland.
+#
+# [out:json][timeout:180];
+#
+# // City of Basel
+# {{geocodeArea:Basel, Switzerland}}->.baselArea;
+#
+# (
+#   // Shopping malls / shopping centres
+#   nwr["shop"="mall"](area.baselArea);
+#
+#   // Alternative OSM tag used for shopping centres
+#   nwr["shop"="shopping_centre"](area.baselArea);
+#
+#   // Major railway stations
+#   nwr["railway"="station"](area.baselArea);
+#
+#   // Pedestrian zones
+#   nwr["highway"="pedestrian"](area.baselArea);
+#
+#   // Retail areas
+#   nwr["landuse"="retail"](area.baselArea);
+#
+#   // Individual retail buildings
+#   nwr["building"="retail"](area.baselArea);
+#
+#   // Department stores
+#   nwr["shop"="department_store"](area.baselArea);
+# );
+#
+# out geom;
 
 # Load input data if needed -------------------------------------------------
 if (exists("gps_df_geo", inherits = TRUE)) {

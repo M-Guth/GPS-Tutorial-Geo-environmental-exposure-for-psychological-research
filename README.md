@@ -8,12 +8,11 @@ The workflow accompanies the manuscript draft
 *From minute-level GPS traces to geo-environmental exposure: a reproducible
 pipeline for psychological research* 
 
-The repository includes synthetic GPS and questionnaire data from five
+The repository includes fixed synthetic GPS and questionnaire inputs from five
 simulated participants in Basel, Switzerland, so the full workflow can be run
-without access to identifiable human mobility or clinical data. The supplied
-`questionnaire_data/questionnaire_data.csv` file is treated as a fixed tutorial
-input. Repository script 06 links both data streams directly through the same
-participant `ID` used by the GPS pipeline.
+without identifiable human mobility or clinical data. The active inputs are
+`basel_gps_data_simulated.csv` and `questionnaire_data.csv`. Repository script 06 links
+both data streams through the shared participant `ID` and calendar date.
 
 ---
 
@@ -32,12 +31,12 @@ Current example data size:
 
 | Dataset | Rows excluding header | File |
 |---|---:|---|
-| Raw simulated GPS observations | 140,245 | `raw_data/basel_gps_data_simulated_v4.csv` |
-| Regularized minute-level GPS data | 107,347 | `interims/gps_df_filled.csv` |
-| Final minute-level output | 107,347 | `Results/gps_full_minute_data.csv` |
+| Raw simulated GPS observations | 93,787 | `raw_data/basel_gps_data_simulated.csv` |
+| Regularized minute-level GPS data | 111,365 | `interims/gps_df_filled.csv` |
+| Final minute-level output | 111,365 | `Results/gps_full_minute_data.csv` |
 | Final day-level output | 79 participant-days | `Results/gps_daylevel.csv` |
 | Final user-level output | 5 participants | `Results/gps_userlevel.csv` |
-| Combined questionnaire data | 436 rows: 426 momentary prompts plus 10 baseline/follow-up records | `questionnaire_data/questionnaire_data.csv` |
+| Combined questionnaire data | 484 rows: 474 momentary prompts plus 10 baseline/follow-up records | `questionnaire_data/questionnaire_data.csv` |
 
 ---
 
@@ -49,14 +48,18 @@ Open the project root in RStudio by opening:
 Tutorial_Repo.Rproj
 ```
 
-Then run the complete workflow from the repository root:
+On a new machine, restore the locked packages first. Then run the complete
+workflow from the repository root:
 
 ```r
+renv::restore(prompt = FALSE)
 source("run_all.R")
 ```
 
 The pipeline expects the working directory to be the repository root. The
-scripts use project-relative paths via `here()`.
+scripts use project-relative paths via `here()`. The numbered workflow reads
+the supplied GPS and questionnaire files but does not regenerate or
+overwrite them.
 
 Individual scripts can also be run step by step:
 
@@ -73,7 +76,9 @@ source("scripts/03_Datawrangling.R")
 The repository uses `renv` for project-specific package management. `renv`
 creates an isolated R package library for this project and records package
 versions in `renv.lock`, reducing the risk that global package updates change
-the results.
+the results. The environment is pinned to **R 4.2.3** and **renv 1.2.4**.
+Use R 4.2.3 to reproduce the tested setup; `renv` installs R packages, not R
+itself or operating-system libraries.
 
 Relevant files:
 
@@ -81,19 +86,86 @@ Relevant files:
 - `renv/settings.json`: stores `renv` settings.
 - `renv.lock`: records the package state.
 - `.Rprofile`: activates `renv` when the project is opened.
+- `.renvignore`: limits package discovery to the numbered tutorial scripts and
+  their entry points, excluding simulation helpers, data, and generated outputs.
 
-If package versions need to be restored on a new machine, run from the project
-root:
+The 16 direct tutorial packages are explicitly loaded in
+`scripts/01_Setup.R`: `dplyr`, `tidyr`, `purrr`, `readr`, `tibble`, `ggplot2`,
+`here`, `lubridate`, `dbscan`, `viridis`, `sf`, `raster`, `exactextractr`,
+`terra`, `nlme`, and `gridExtra`. Literal `library()` calls allow `renv` to
+detect every import. The lockfile contains these packages, `renv`, and their
+required `Depends`, `Imports`, and `LinkingTo` dependencies: 69 packages in
+total. Suggested packages and unrelated development packages are not installed.
+Base R packages are provided by R; matching recommended packages may be used
+from renv's sandbox library.
+
+### Restore on a new machine
+
+Install R 4.2.3 for the machine's operating system and architecture, copy or
+clone the project including its input data, and open `Tutorial_Repo.Rproj`.
+The project `.Rprofile` bootstraps the pinned `renv` version. Internet access
+is required for the first download. Then run:
 
 ```r
-renv::restore()
+renv::restore(prompt = FALSE)
+renv::status()
+source("run_all.R")
 ```
 
-If packages are intentionally updated, update the lockfile with:
+The same sequence is available from a terminal in the repository root:
+
+```sh
+Rscript -e 'renv::restore(prompt = FALSE)'
+Rscript run_all.R
+```
+
+If R was started with `--vanilla` or from a different working directory, first
+change to the project root and run `source("renv/activate.R")` before restoring.
+Do not copy another computer's `renv/library/` directory: restore the lockfile
+so packages are installed for the destination platform.
+
+### Platform prerequisites
+
+The spatial packages also depend on GDAL, GEOS, PROJ, and UDUNITS-2. Package
+binaries normally supply their native dependencies on Windows and macOS.
+Because the environment pins older versions, some packages may need to be
+compiled from source when a matching binary is unavailable.
+
+- **Windows:** use Rtools42 with R 4.2.x for source compilation.
+- **macOS:** use an R build matching the Mac's CPU architecture. Source
+  compilation requires Xcode Command Line Tools, an R-compatible Fortran
+  compiler where needed, and the spatial libraries. Homebrew users can install
+  the native libraries with `brew install pkg-config gdal geos proj udunits`.
+- **Ubuntu/Debian:** before restoring source packages, install the build tools
+  and spatial headers, for example:
+
+  ```sh
+  sudo apt-get update
+  sudo apt-get install -y build-essential gfortran pkg-config cmake \
+    libgdal-dev libgeos-dev libproj-dev libudunits2-dev libssl-dev libsqlite3-dev
+  ```
+
+See the official [sf installation instructions](https://r-spatial.github.io/sf/#installing),
+[terra installation instructions](https://rspatial.github.io/terra/), and
+[Rtools42 instructions](https://cran.r-project.org/bin/windows/Rtools/rtools42/rtools.html).
+System-library versions can affect floating-point results, so small numerical
+differences in model coefficients can occur across platforms.
+
+### Maintain and check the environment
+
+When adding a tutorial package, add a literal `library(package)` call to
+`scripts/01_Setup.R`, install the chosen version into the active project, and
+update the lockfile and check its status:
 
 ```r
-renv::snapshot()
+renv::snapshot(prompt = FALSE)
+renv::status()
 ```
+
+Keep the default `implicit` snapshot mode and commit `.renvignore`,
+`renv.lock`, `renv/activate.R`, `renv/settings.json`, `.Rprofile`, and the
+changed scripts together. Do not use `snapshot(type = "all")`, which would
+record unrelated installed packages.
 
 ---
 
@@ -105,10 +177,11 @@ Tutorial_Repo/
 ├── run_all.R
 ├── README.md
 ├── .gitignore
+├── .renvignore
 ├── .here
 │
 ├── raw_data/
-│   └── basel_gps_data_simulated_v4.csv
+│   └── basel_gps_data_simulated.csv
 │
 ├── geodata/
 │   ├── crowded_areas/
@@ -171,8 +244,10 @@ Tutorial_Repo/
 ```
 
 `Results/` and `interims/` keep their folder structure through `.gitkeep`
-files, while generated contents are ignored by `.gitignore`. The supplied file
-in `questionnaire_data/` is versioned as transparent, fixed tutorial input data.
+files, while generated contents are ignored by `.gitignore`. The active GPS
+and questionnaire files are supplied as fixed tutorial inputs. The GPS data
+were simulated using the street and path network. Data-generation helpers
+and the source network are not included or required to run the tutorial.
 
 The numbered main workflow ends with `07_statistics.R`.
 
@@ -185,7 +260,7 @@ The numbered main workflow ends with `07_statistics.R`.
 The raw GPS input is:
 
 ```text
-raw_data/basel_gps_data_simulated_v4.csv
+raw_data/basel_gps_data_simulated.csv
 ```
 
 Required columns:
@@ -201,7 +276,11 @@ Required columns:
 
 The simulated data mimic common passive sensing issues: irregular sampling,
 heterogeneous GPS accuracy, stationary periods, movement episodes, longer gaps,
-and participant-specific mobility patterns.
+and participant-specific mobility patterns. Routes are finite curved paths with
+explicit speed limits; stationary error is small and autocorrelated. Daily
+choices between greener/less sealed/non-crowded and more urban/crowded
+destinations create transparent exposure variation without implausible spatial
+jumps.
 
 ### External Geodata
 
@@ -235,7 +314,7 @@ Initializes the project environment.
 
 Loads the simulated GPS input CSV.
 
-- Reads `raw_data/basel_gps_data_simulated_v4.csv`.
+- Reads `raw_data/basel_gps_data_simulated.csv`.
 - Stores the table as `gps_df` in the R session.
 - Stops if the input file is missing.
 
@@ -560,7 +639,8 @@ Day-level aggregation uses:
 
 ### 06_merge_questionnaire_daylevel.R
 
-Reads the supplied questionnaire input file without modifying or overwriting it.
+Reads `questionnaire_data/questionnaire_data.csv` without modifying or
+overwriting it.
 The script:
 
 - filters the `momentary` rows and aggregates the six daily prompts to
@@ -627,6 +707,11 @@ Outputs:
 | File | Description |
 |---|---|
 | `questionnaire_data/questionnaire_data.csv` | All baseline, momentary, and follow-up records in one REDCap-like longitudinal table |
+
+The questionnaire file contains 474 scheduled momentary prompts and 10
+baseline/follow-up records. Of the momentary prompts, 372 are completed. The programmed
+synthetic relationships are teaching-data properties, not empirical or causal
+evidence.
 
 ### Final Files
 

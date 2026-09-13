@@ -25,7 +25,8 @@ if (exists("gps_df_filled", inherits = TRUE)) {
 ## Load and select the indicators created by the geo scripts ####
 distance <- readr::read_csv2(
   here("interims/geo/gps_df_geo_distance.csv"),
-  show_col_types = FALSE
+  show_col_types = FALSE,
+  locale = readr::locale(tz = "Europe/Zurich")
 ) %>%
   dplyr::select(
     ID, timestamp_minute, date, distances, speed_kmh, cumulative_distance,
@@ -37,7 +38,8 @@ distance <- readr::read_csv2(
 
 cluster <- readr::read_csv2(
   here("interims/geo/clusters_final_df.csv"),
-  show_col_types = FALSE
+  show_col_types = FALSE,
+  locale = readr::locale(tz = "Europe/Zurich")
 ) %>%
   dplyr::select(
     ID, timestamp_minute, cluster_number, cluster_id,
@@ -48,14 +50,16 @@ cluster <- readr::read_csv2(
 
 crowded_areas <- readr::read_csv2(
   here("interims/geo/gps_df_geo_crowded_areas.csv"),
-  show_col_types = FALSE
+  show_col_types = FALSE,
+  locale = readr::locale(tz = "Europe/Zurich")
 ) %>%
   dplyr::select(ID, timestamp_minute, crowded_area, pedestrian, shop, railway) %>%
   distinct(ID, timestamp_minute, .keep_all = TRUE)
 
 home <- readr::read_csv2(
   here("interims/geo/gps_df_geo_home.csv"),
-  show_col_types = FALSE
+  show_col_types = FALSE,
+  locale = readr::locale(tz = "Europe/Zurich")
 ) %>%
   dplyr::select(
     ID, timestamp_minute, home_latitude, home_longitude,
@@ -65,14 +69,16 @@ home <- readr::read_csv2(
 
 imperviousness <- readr::read_csv2(
   here("interims/geo/gps_imperviousness.csv"),
-  show_col_types = FALSE
+  show_col_types = FALSE,
+  locale = readr::locale(tz = "Europe/Zurich")
 ) %>%
   dplyr::select(ID, timestamp_minute, imperviousness_mean_100m) %>%
   distinct(ID, timestamp_minute, .keep_all = TRUE)
 
 green <- readr::read_csv2(
   here("interims/geo/gps_ndvi.csv"),
-  show_col_types = FALSE
+  show_col_types = FALSE,
+  locale = readr::locale(tz = "Europe/Zurich")
 ) %>%
   dplyr::select(
     ID, timestamp_minute, ndvi_mean_100m,
@@ -82,7 +88,8 @@ green <- readr::read_csv2(
 
 population <- readr::read_csv2(
   here("interims/geo/gps_population.csv"),
-  show_col_types = FALSE
+  show_col_types = FALSE,
+  locale = readr::locale(tz = "Europe/Zurich")
 ) %>%
   dplyr::select(ID, timestamp_minute, avg_T, grid_cells) %>%
   distinct(ID, timestamp_minute, .keep_all = TRUE)
@@ -107,8 +114,8 @@ gps_full_minute_data <- gps_df_filled %>%
 # Aggregate to day level --------------------------------------------------
 gps_daylevel <- gps_full_minute_data %>%
   mutate(
-    timestamp_local = as.POSIXct(timestamp_minute, tz = "CET"),
-    date = as.Date(timestamp_local),
+    timestamp_local = with_tz(timestamp_minute, "Europe/Zurich"),
+    date = as.Date(timestamp_local, tz = "Europe/Zurich"),
     hour_local = hour(timestamp_local),
     is_daytime = hour_local >= 7 & hour_local < 22,
     is_nighttime = hour_local >= 22 | hour_local < 5
@@ -126,9 +133,17 @@ gps_daylevel <- gps_full_minute_data %>%
     Minutes_slow_kmh_day = sum(`Minutes_<20_kmh`, na.rm = TRUE),
     Minutes_fast_kmh_day = sum(`Minutes_>20_kmh`, na.rm = TRUE),
     Minutes_Stationary_day = sum(Minutes_Stationary, na.rm = TRUE),
-    cumulative_distance_day = round(max(cumulative_distance, na.rm = TRUE) / 1000, 3),
-    cumulative_distance_slow_day = round(max(cumulative_distance_slow, na.rm = TRUE) / 1000, 3),
-    cumulative_distance_fast_day = round(max(cumulative_distance_fast, na.rm = TRUE) / 1000, 3),
+    # Sum minute-level displacement directly. This is robust to timezone
+    # round-trips in CSV intermediates and exactly reconciles with user totals.
+    cumulative_distance_day = round(sum(distances, na.rm = TRUE) / 1000, 3),
+    cumulative_distance_slow_day = round(
+      sum(if_else(speed_kmh < 20, distances, 0), na.rm = TRUE) / 1000,
+      3
+    ),
+    cumulative_distance_fast_day = round(
+      sum(if_else(speed_kmh > 20, distances, 0), na.rm = TRUE) / 1000,
+      3
+    ),
 
     # Unique places
     day_unique_cluster_count = first(na.omit(day_unique_cluster_count)),
@@ -211,9 +226,19 @@ gps_userlevel <- gps_full_minute_data %>%
     Minutes_slow_kmh_user = sum(`Minutes_<20_kmh`, na.rm = TRUE),
     Minutes_fast_kmh_user = sum(`Minutes_>20_kmh`, na.rm = TRUE),
     Minutes_Stationary_user = sum(Minutes_Stationary, na.rm = TRUE),
-    cumulative_distance_user = round(max(cumulative_distance, na.rm = TRUE) / 1000, 3),
-    cumulative_distance_slow_user = round(max(cumulative_distance_slow, na.rm = TRUE) / 1000, 3),
-    cumulative_distance_fast_user = round(max(cumulative_distance_fast, na.rm = TRUE) / 1000, 3),
+    # Daily cumulative-distance columns reset at midnight. Summing the
+    # minute-level distances therefore gives the correct total across all
+    # participant-days; max(cumulative_distance) would retain only the longest
+    # single day.
+    cumulative_distance_user = round(sum(distances, na.rm = TRUE) / 1000, 3),
+    cumulative_distance_slow_user = round(
+      sum(if_else(speed_kmh < 20, distances, 0), na.rm = TRUE) / 1000,
+      3
+    ),
+    cumulative_distance_fast_user = round(
+      sum(if_else(speed_kmh > 20, distances, 0), na.rm = TRUE) / 1000,
+      3
+    ),
 
     # Crowded areas and home stay
     crowded_area_minutes_user = sum(crowded_area, na.rm = TRUE),
