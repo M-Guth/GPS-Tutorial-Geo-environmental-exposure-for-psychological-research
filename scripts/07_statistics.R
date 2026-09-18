@@ -290,7 +290,7 @@ write.csv2(
 
 
 # Illustrative model plot ------------------------------------------------
-pooled_plot <- ggplot2::ggplot(
+overall_plot <- ggplot2::ggplot(
   analysis_data,
   ggplot2::aes(x = mean_ndvi_100m_day, y = ema_stress_mean)
 ) +
@@ -302,7 +302,7 @@ pooled_plot <- ggplot2::ggplot(
     fill = "#3366CC"
   ) +
   ggplot2::labs(
-    title = "Pooled association",
+    title = "Overall association",
     x = "Daily mean NDVI (100 m buffer)",
     y = "Daily EMA stress"
   ) +
@@ -334,7 +334,7 @@ participant_plot <- ggplot2::ggplot(
   ggplot2::theme(legend.position = "bottom")
 
 plot_grob <- gridExtra::arrangeGrob(
-  pooled_plot,
+  overall_plot,
   participant_plot,
   ncol = 2,
   top = grid::textGrob(
