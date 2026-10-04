@@ -24,21 +24,21 @@
 # Functions ---------------------------------------------------------------
 ## Haversine distance function ####
 distanceGPS <- function(lat1, lon1, lat2, lon2) {
-  
+
   # Convert degrees to radians
   lat1 <- lat1 * pi/180
   lat2 <- lat2 * pi/180
   lon2 <- lon2 * pi/180
   lon1 <- lon1 * pi/180
-  
+
   # Haversine formula;
   R = 6371000
   a <- sin(0.5 * (lat2 - lat1))
   b <- sin(0.5 * (lon2 - lon1))
   d <- 2 * R * asin(sqrt(a * a + cos(lat1) * cos(lat2) * b * b))
-  
+
   return(d)
-  
+
 }
 
 # Load input data if needed -------------------------------------------------
@@ -74,12 +74,12 @@ gps_df_geo <- gps_df_filled %>%
     speed_kmh = distances * 60 / 1000,
     cumulative_distance = cumsum(distances),
     `Minutes_<20_kmh` = ifelse(speed_kmh > 0.001 & speed_kmh < 20, 1, 0),
-    `Minutes_>20_kmh` = ifelse(speed_kmh > 20, 1, 0),
+    `Minutes_>20_kmh` = ifelse(speed_kmh >= 20, 1, 0),
     Minutes_Stationary = ifelse(speed_kmh > 0, 0, 1),
     cumulative_distance_slow = cumsum(ifelse(speed_kmh < 20, distances, 0)),
-    cumulative_distance_fast = cumsum(ifelse(speed_kmh > 20, distances, 0))
+    cumulative_distance_fast = cumsum(ifelse(speed_kmh >= 20, distances, 0))
   ) %>%
-  ungroup() 
+  ungroup()
 
 # Save result to file (will be loaded by 04_5 and 04_6) --------------------
 write.csv2(gps_df_geo, here("interims/geo/gps_df_geo_distance.csv"))
